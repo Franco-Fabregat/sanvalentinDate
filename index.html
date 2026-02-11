@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cita San Valentín</title>
+    <style>
+      body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        margin: 0;
+        background-color: #e8a8f2;
+      }
+
+      h1 {
+        font-size: 36px;
+        margin-bottom: 20px;
+        text-align: center;
+        color: #fff;
+        text-shadow: 2px 2px 4px #000;
+      }
+
+      /* Estilos para la lluvia de corazones */
+      .raindrop {
+        position: fixed;
+        top: -60px;
+        pointer-events: none;
+        z-index: 9999;
+        will-change: transform, opacity;
+        text-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+      }
+
+      @keyframes fall {
+        to {
+          transform: translateY(110vh) rotate(360deg);
+          opacity: 0.15;
+        }
+      }
+
+      button {
+        font-size: 24px;
+        padding: 10px 20px;
+        margin: 10px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        background-color: blueviolet;
+      }
+
+      @media (max-width: 600px) {
+        h1 {
+          font-size: 24px;
+        }
+        button {
+          font-size: 18px;
+        }
+
+        .raindrop {
+          font-size: 12px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Quieres ser mi San Valentín? 😍🙂</h1>
+    <div class="caja-botones">
+      <button>¡Sí!</button>
+      <button>No</button>
+    </div>
+  </body>
+  <script>
+    const buttons = document.querySelectorAll("button");
+    const yesButton = buttons[0];
+    const noButton = buttons[1];
+    const cajaBotones = document.querySelector(".caja-botones");
+    const h1 = document.querySelector("h1");
+
+    // Frases de súplica/preguntas (objeto con 6 propiedades)
+    const pleasArr = [
+      " ¿Por favor? 🥺",
+      "¿Estas segura?? 😢",
+      "Va, te doy otra oportunidad... piénsalo 🥺",
+      "Ya estaaaaa, dime que sí 🤣",
+      "La concha de... 😠",
+      "Bueno, si eso quieres...🤷‍♂️",
+      "Naaaah, mentira no tienes opción 😂😂 ",
+      "Todavia sigues insistiendo? 🤦‍♂️",
+      "Noooooooo linda, es el otro botón! ",
+      "No demores más pe basuuuuuuuraaaaa! 😡",
+      "Si, quiero ser tu San Valentín (acepta ya) 😤",
+      "Ya no sé que más poner repelotuda... (ACEPTA) 😩",
+    ];
+    let pleaIndex = 0;
+
+    // Función compartida para el evento del noButton (desktop y móvil)
+    function handleNoButtonInteraction() {
+      const randomX = Math.floor(
+        Math.random() * (window.innerWidth - noButton.offsetWidth),
+      );
+      const randomY = Math.floor(
+        Math.random() * (window.innerHeight - noButton.offsetHeight),
+      );
+      noButton.style.position = "absolute";
+      noButton.style.left = `${randomX}px`;
+      noButton.style.top = `${randomY}px`;
+
+      // Hacer el botón "Sí" más grande y obvio
+      let currentSize = parseFloat(window.getComputedStyle(yesButton).fontSize);
+      yesButton.style.fontSize = currentSize + 4 + "px";
+      yesButton.style.padding =
+        currentSize / 6 + 30 + "px " + (currentSize / 6 + 40) + "px";
+      yesButton.style.backgroundColor = "#ff1493";
+      yesButton.style.boxShadow = "0 0 20px rgba(255, 20, 147, 0.8)";
+
+      // Mostrar la siguiente frase en orden hasta la última
+      h1.textContent = pleasArr[Math.min(pleaIndex, pleasArr.length - 1)];
+      if (pleaIndex < pleasArr.length - 1) pleaIndex++;
+    }
+
+    // Lluvia de corazones: control de tamaño/inicio/parada
+    let rainInterval = null;
+    function createDrop() {
+      const drop = document.createElement("div");
+      drop.className = "raindrop";
+      const emojis = ["❤️", "🥳"];
+      drop.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+      const size = Math.floor(Math.random() * 28) + 20; // 18-46px
+      drop.style.fontSize = size + "px";
+      drop.style.left =
+        Math.floor(Math.random() * (window.innerWidth - 50)) + "px";
+      drop.style.opacity = (Math.random() * 0.6 + 0.4).toString();
+      const duration = Math.floor(Math.random() * 2500) + 4500; // 4.5s - 7s
+      drop.style.animation = `fall ${duration}ms linear`;
+      drop.addEventListener("animationend", () => drop.remove());
+      document.body.appendChild(drop);
+    }
+
+    function startRain() {
+      if (rainInterval) return;
+      // crear algunas gotas iniciales
+      for (let i = 0; i < 8; i++) createDrop();
+      rainInterval = setInterval(() => createDrop(), 150);
+    }
+
+    function stopRain() {
+      if (!rainInterval) return;
+      clearInterval(rainInterval);
+      rainInterval = null;
+    }
+
+    noButton.addEventListener("mouseover", handleNoButtonInteraction);
+    noButton.addEventListener("touchstart", (e) => {
+      e.preventDefault();
+      handleNoButtonInteraction();
+    });
+
+    yesButton.addEventListener("click", () => {
+      cajaBotones.innerHTML = "";
+      const audio = new Audio("crowd-cheering-310544.mp3");
+      // intentar reproducir, luego iniciar lluvia; si falla, igual iniciamos
+      audio.play().catch(() => {});
+      startRain();
+      audio.addEventListener("loadedmetadata", () => {
+        const ms = Math.min(Math.max(audio.duration * 1000, 5000), 10000);
+        setTimeout(stopRain, ms);
+      });
+      // fallback por si metadata no está disponible
+      setTimeout(stopRain, 8000);
+
+      const img = document.createElement("img");
+      img.width = 300;
+      img.height = 200;
+      img.style.display = "block";
+      img.src = "https://media.giphy.com/media/l0MYt5jPR6QX5pnqM/giphy.gif";
+      cajaBotones.appendChild(img);
+      h1.textContent = "Sabía que ibas a decir que si! 💖";
+    });
+  </script>
+</html>
